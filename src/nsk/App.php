@@ -36,7 +36,7 @@ class App
         $aktivitetskort->LedarRegister = new LedarRegister();
         $aktivitetskort->LedarRegister->Ledare= $this->ledarLista;
         $xml = $service->writeValueObject($aktivitetskort);
-        $xml = str_replace("xmlns=\"\"", "", $xml);
+        $xml = str_replace(" xmlns=\"\"", "", $xml);
         $xml = str_replace("<?xml version=\"1.0\"?>", "<?xml version=\"1.0\" encoding=\"utf-16\"?>", $xml);
         file_put_contents("/Users/tobias/Desktop/deltagarlista-nsk.xml", $xml);
         //echo $xml;
@@ -201,7 +201,7 @@ class App
                 $deltagarStatus->id = $deltagare->id;
                 $deltagarStatus->Handikapp = "false";
                 $deltagarStatus->Naervarande = $isPresent;
-                $sammankomst->DeltagarLista->DeltagarLista[] = $deltagarStatus;
+                $sammankomst->DeltagarLista->Deltagare[] = $deltagarStatus;
             }
             $ledarStartRow = 42;
             $ledarEndRow = 47;

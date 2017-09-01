@@ -12,5 +12,5 @@ namespace nsk;
 class DeltagarLista
 {
 
-    public $DeltagarLista = [];
+    public $Deltagare = [];
 }
