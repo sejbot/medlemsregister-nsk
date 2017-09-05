@@ -37,10 +37,8 @@ class App
         $aktivitetskort->LedarRegister->Ledare= $this->ledarLista;
         $xml = $service->writeValueObject($aktivitetskort);
         $xml = str_replace(" xmlns=\"\"", "", $xml);
-        $xml = str_replace("<?xml version=\"1.0\"?>", "<?xml version=\"1.0\" encoding=\"utf-16\"?>", $xml);
+        $xml = str_replace("<?xml version=\"1.0\"?>", "<?xml version=\"1.0\" encoding=\"utf-8\"?>", $xml);
         file_put_contents("/Users/tobias/Desktop/deltagarlista-nsk.xml", $xml);
-        //echo $xml;
-        //echo "\n";
     }
 
     private function setupXMLService() {
@@ -61,8 +59,9 @@ class App
         $service->mapValueObject("{}LedarRegister/Ledare", Ledare::class);
 
         $service->classMap[Aktivitetskort::class] = function(Writer $writer, Aktivitetskort $aktivitetskort) {
-            $writer->writeAttribute("xmlns:xsd", "http://www.w3.org/2001/XMLSchema");
             $writer->writeAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+            $writer->writeAttribute("xmlns:xsd", "http://www.w3.org/2001/XMLSchema");
+            $writer->writeAttribute("xmlns", "http://aktivitetskort.net.umea.se/importSchema.xsd");
             foreach(get_object_vars($aktivitetskort) as $key=> $value ) {
                 $writer->writeElement($key, $value);
             }
@@ -76,7 +75,9 @@ class App
             $writer->writeAttribute("foereningsID", $foerening->foereningsID);
             $writer->writeAttribute("foereningsNamn", $foerening->foereningsNamn);
             $writer->writeAttribute("organisationsnummer", $foerening->organisationsnummer);
-            $writer->writeElement("Naervarokort", $foerening->Naervarokort);
+            foreach($foerening->Naervarokort as $naervarokort) {
+                $writer->writeElement("Naervarokort", $naervarokort);
+            }
             $writer->writeElement("BorttagnaSammankomster", $foerening->BorttagnaSammankomster);
         };
 
@@ -115,6 +116,24 @@ class App
             }
         };
 
+        $service->classMap[Deltagare::class] = function(Writer $writer, Deltagare $deltagare) {
+            $writer->writeAttribute("id", $deltagare->id);
+            foreach(get_object_vars($deltagare) as $key=> $value ) {
+                if($key != "id") {
+                    $writer->writeElement($key, $value);
+                }
+            }
+        };
+
+        $service->classMap[Ledare::class] = function(Writer $writer, Ledare $ledare) {
+            $writer->writeAttribute("id", $ledare->id);
+            foreach(get_object_vars($ledare) as $key=> $value ) {
+                if($key != "id") {
+                    $writer->writeElement($key, $value);
+                }
+            }
+        };
+
 
         return $service;
     }
@@ -146,9 +165,8 @@ class App
         $naervarokortLista[] = $this->createNaervarokortFromExcel($sheetData, 15, 74, 74, "Taevling");
         $naervarokortLista[] = $this->createNaervarokortFromExcel($sheetData, 16, 75, 75, "Taevling");
         $naervarokortLista[] = $this->createNaervarokortFromExcel($sheetData, 17, 76, 76, "Taevling");
-        //$naervarokortLista[] = $this->createNaervarokortFromExcel($sheetData, 18, 77, 77, "Taevling");
-        //$naervarokortLista[] = $this->createNaervarokortFromExcel($sheetData, 19, 78, 81, "Taevling");
-
+        $naervarokortLista[] = $this->createNaervarokortFromExcel($sheetData, 18, 77, 77, "Taevling");
+        $naervarokortLista[] = $this->createNaervarokortFromExcel($sheetData, 19, 78, 81, "Taevling");
         return $naervarokortLista;
     }
 

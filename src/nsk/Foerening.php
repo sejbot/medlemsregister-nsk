@@ -14,6 +14,6 @@ class Foerening
     public $foereningsID;
     public $foereningsNamn;
     public $organisationsnummer;
-    public $Naervarokort;
+    public $Naervarokort = [];
     public $BorttagnaSammankomster;
 }
