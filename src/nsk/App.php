@@ -17,17 +17,19 @@ class App
 
     private $deltagarLista;
     private $ledarLista;
-    public function run() {
-        ini_set("default_charset", "utf-16");
-        $excelObject = \PHPExcel_IOFactory::load(__DIR__."/../../data/medlemsregister.xlsx");
+    public function run($fileName) {
+        ini_set("default_charset", "utf-8");
+        $fileNameInfo = pathinfo($fileName);
+        $excelObject = \PHPExcel_IOFactory::load(__DIR__."/../../data/$fileName");
         $sheetData = $excelObject->getActiveSheet();
         $service = $this->setupXMLService();
+        $specList = $this->createSpecListFromFile($fileNameInfo);
         $this->deltagarLista = $this->createDeltagarListaFromExcel($sheetData);
         $this->ledarLista = $this->createLedarListaFromExcel($sheetData);
         $aktivitetskort = new Aktivitetskort();
         $kommun = new Kommun("1480");
         $foerening = $this->createFoerening();
-        $naervarokort = $this->createNaervaroKortListaFromExcel($sheetData);
+        $naervarokort = $this->createNaervaroKortListaFromExcel($sheetData, $specList);
         $foerening->Naervarokort = $naervarokort;
         $kommun->Foerening = $foerening;
         $aktivitetskort->Kommun = $kommun;
@@ -38,7 +40,8 @@ class App
         $xml = $service->writeValueObject($aktivitetskort);
         $xml = str_replace(" xmlns=\"\"", "", $xml);
         $xml = str_replace("<?xml version=\"1.0\"?>", "<?xml version=\"1.0\" encoding=\"utf-8\"?>", $xml);
-        file_put_contents("/Users/tobias/Desktop/deltagarlista-nsk.xml", $xml);
+
+        file_put_contents(__DIR__."/../../data/".$fileNameInfo['filename'].".xml", $xml);
     }
 
     private function setupXMLService() {
@@ -138,6 +141,13 @@ class App
         return $service;
     }
 
+    private function createSpecListFromFile($fileNameInfo) {
+      $specFile = $fileNameInfo['filename'].'-spec.csv';
+      $specPath = __DIR__."/../../data/".$specFile;
+      $specList = array_map('str_getcsv', file($specPath));
+      return $specList;
+    }
+
     public function createFoerening() {
         $foerening = new Foerening();
         $foerening->foereningsID = "1"; //TODO: Har klubben något riktigt id?
@@ -146,9 +156,12 @@ class App
         return $foerening;
     }
 
-    public function createNaervarokortListaFromExcel(\PHPExcel_Worksheet $sheetData) {
+    public function createNaervarokortListaFromExcel(\PHPExcel_Worksheet $sheetData, $specList) {
         $naervarokortLista = [];
-        $naervarokortLista[] = $this->createNaervarokortFromExcel($sheetData, 1, 8, 23);
+        foreach($specList as $spec) {
+          $naervarokortLista[] = $this->createNaervarokortFromExcel($sheetData, $spec[0], $spec[1], $spec[2], $spec[3]);
+        }
+        /*$naervarokortLista[] = $this->createNaervarokortFromExcel($sheetData, 1, 8, 23);
         $naervarokortLista[] = $this->createNaervarokortFromExcel($sheetData, 2, 24, 24);
         $naervarokortLista[] = $this->createNaervarokortFromExcel($sheetData, 3, 25, 41);
         $naervarokortLista[] = $this->createNaervarokortFromExcel($sheetData, 4, 42, 58);
@@ -167,6 +180,7 @@ class App
         $naervarokortLista[] = $this->createNaervarokortFromExcel($sheetData, 17, 76, 76, "Taevling");
         $naervarokortLista[] = $this->createNaervarokortFromExcel($sheetData, 18, 77, 77, "Taevling");
         $naervarokortLista[] = $this->createNaervarokortFromExcel($sheetData, 19, 78, 81, "Taevling");
+        */
         return $naervarokortLista;
     }
 
@@ -210,7 +224,7 @@ class App
             $sammankomst->LedarLista = new LedarLista();
 
             $deltagarStartRow = 10;
-            $deltagarEndRow = 41;
+            $deltagarEndRow = 36;
             for($deltagarRow = $deltagarStartRow; $deltagarRow <= $deltagarEndRow; $deltagarRow++) {
                 $deltagarPersonNummer = $sheetData->getCellByColumnAndRow(5, $deltagarRow)->getValue();
                 $isPresent = $sheetData->getCellByColumnAndRow($col,$deltagarRow)->getValue() == "x" ? "true" : "false";
@@ -221,8 +235,8 @@ class App
                 $deltagarStatus->Naervarande = $isPresent;
                 $sammankomst->DeltagarLista->Deltagare[] = $deltagarStatus;
             }
-            $ledarStartRow = 42;
-            $ledarEndRow = 47;
+            $ledarStartRow = 37;
+            $ledarEndRow = 42;
             for($ledarRow = $ledarStartRow; $ledarRow <= $ledarEndRow; $ledarRow++) {
                 $ledarPersonNummer = $sheetData->getCellByColumnAndRow(5, $ledarRow)->getValue();
                 $isPresent = $sheetData->getCellByColumnAndRow($col,$ledarRow)->getValue() == "x" ? "true" : "false";
@@ -245,7 +259,7 @@ class App
         $properties = ["Namn", "Postnr", "Postadress", "Kommun", "Personnummer", "Kon"];
         $municipalityCodes = ["Göteborgs Kommun" => "1480", "Stenungsunds Kommun" => "1415", "Öckerö Kommun" => "1407", "Partille Kommun" => "1402"];
         $deltagarStartRow = 10;
-        $deltagarEndRow = 41;
+        $deltagarEndRow = 36;
         $deltagarStartColumn = 1;
         $deltagarEndColumn = 6;
         for($row = $deltagarStartRow; $row <= $deltagarEndRow; $row++) {
@@ -279,8 +293,8 @@ class App
         $deltagarLista = [];
         $properties = ["Namn", "Postnr", "Postadress", "Kommun", "Personnummer", "Kon"];
         $municipalityCodes = ["Göteborgs Kommun" => "1480", "Stenungsunds Kommun" => "1415", "Öckerö Kommun" => "1407", "Partille Kommun" => "1402"];
-        $deltagarStartRow = 42;
-        $deltagarEndRow = 47;
+        $deltagarStartRow = 37;
+        $deltagarEndRow = 42;
         $deltagarStartColumn = 1;
         $deltagarEndColumn = 6;
         for($row = $deltagarStartRow; $row <= $deltagarEndRow; $row++) {
