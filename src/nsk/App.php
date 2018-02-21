@@ -201,8 +201,8 @@ class App
                 $propertyValue = $sheetData->getCellByColumnAndRow($col, $row);
             }
             $year = "2017";
-            $month = $sheetData->getCellByColumnAndRow($naervarokortStartColumn, 4)->getValue();
-            $day = $sheetData->getCellByColumnAndRow($naervarokortStartColumn, 5)->getValue();
+            $month = $sheetData->getCellByColumnAndRow($col, 4)->getValue();
+            $day = $sheetData->getCellByColumnAndRow($col, 5)->getValue();
             $code = $year;
             $startDateTime = \DateTime::createFromFormat("Y-n-j", "$year-$month-$day");
             $datum = $startDateTime->format("Y-m-d");
